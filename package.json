@@ -12,7 +12,9 @@
   "dependencies": {
     "q": "~0.9.6",
     "coffee-script": "~1.6.3",
-    "mime": "~1.2.11"
+    "mime": "~1.2.11",
+    "request": "^2.53.0",
+    "co": "^4.1.0"
   },
   "devDependencies": {
     "jasmine-node": "1.10.2",
@@ -21,7 +23,6 @@
     "coffeeify": "0.1.0",
     "watchify": "0.1.0",
     "beefy": "",
-    "usco-kernel": "git://github.com/usco/usco-kernel#master",
     "kew": "~0.1.7"
   },
   "scripts": {
