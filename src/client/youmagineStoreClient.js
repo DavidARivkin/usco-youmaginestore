@@ -1,62 +1,99 @@
 var co = require('co')
 var request = require('co-request')
+var detectEnv = require("composite-detect")
+var HTTPStatus = require('http-status')
+//var Q = require ("q")
+/*
+if( detectEnv.isModule )
+{
+  Minilog=require("minilog")
+  Minilog.pipe(Minilog.suggest).pipe(Minilog.backends.console.formatClean).pipe(Minilog.backends.console)
+  logger = Minilog('youmagine-store')
+}
+
+if( detectEnv.isNode ){
+  XMLHttpRequest = require("xhr2").XMLHttpRequest
+  Minilog.pipe(Minilog.suggest).pipe(Minilog.backends.console.formatColor).pipe(Minilog.backends.console)
+}
+
+if( detectEnv.isBrowser){
+
+  XMLHttpRequest = window.XMLHttpRequest
+  Minilog.pipe(Minilog.suggest).pipe(Minilog.backends.console.formatClean).pipe(Minilog.backends.console)
+  logger = Minilog('youmagine-store')
+}*/
+
+//FIXME: hack
+var logger = function(){
+}
+logger.debug = function(  ){
+  var args = "";
+  for(var key in arguments)
+  {
+    args+=arguments[key];
+  }
+  console.log(args);
+}
+logger.info = function( stuff ){
+  console.log(stuff);
+}
+logger.warn = function( stuff ){
+  console.log(stuff);
+}
+logger.error = function( stuff ){
+   var args = "";
+  for(var key in arguments)
+  {
+    args+=arguments[key];
+  }
+  console.log(args);
+}
+
 
 
 class User {
   constructor(name, client){
     this.name   = name 
     this.client = client
-    this._uri = `https://api.youmagine.com/users/${this.name}.json?auth_token=${this.client.token}`;
-    //"https://test.youmagine.com/designs/the-raptor-hand-by-e-nable/assemblies/1/annotations.json";
+    this._uri = `${this.client.rootUri}/users/${this.name}.json?auth_token=${this.client.token}`;
   }
   
   *infos(){
-    console.log("infos for this user");
-    var response = yield this.client.request( this._uri ) ;
-    console.log("response for user infos",response.body);
+    logger.debug("infos for this user");
+    var response = yield this.client.get( this._uri ) ;
+    logger.debug("response for user infos",response.body);
   }
   
   *list(){
-    console.log("list users");
-    var usersUri = "https://test-api.youmagine.com/users.json?auth_token=`${this.client.token}`"
-    //
-    //http://api.youmagine.com/designs.json?auth_token={token}
+    logger.debug("list users");
+    var usersUri = `${this.client.rootUri}/users.json?auth_token=${this.client.token}`
     var response = this.client.request( this._uri );
-    console.log("response for users list",response.body);
+    logger.debug("response for users list",response.body);
   }
   
   *designs(){
-    console.log("designs for this user");
-    var userDesignUri = `https://api.youmagine.com/users/${this.name}/designs.json?auth_token=${this.client.token}`
-    var designs = yield this.client.request( userDesignUri ) ;
+    logger.debug("designs for this user");
+    var userDesignUri = `${this.client.rootUri}/users/${this.name}/designs.json?auth_token=${this.client.token}`
+    var designs = yield this.client.get( userDesignUri ) ;
   }
 }
-/*
-
-function User(name, client){
-  this.name   = name 
-  this.client = client
-  this._uri = `https://api.youmagine.com/users/${this.name}.json?auth_token=${this.client.token}`;
-  console.log("user created");
-}
-
-User.prototype={};
-
-User.prototype.infos=function*(path){
- console.log("infos for this user");
-  console.log("gnswsdf");
-  var response = yield this.client.request( this._uri ) ;
-  console.log("final response",response.body);
-}*/
 
 
 class Design {
-  constructor(userName, name, client){
-    this.userName = userName
-    this.name     = name 
+  constructor(name, client){
+    //FIXME:no destructuring yet...
+    //[this.userName,this.name] = name.split("/");
+    
+    var _tmp = name.split("/");
+    this.name     = _tmp[1];
+    this.userName = _tmp[0];
+    
     this.client   = client
-    this._uri     = `https://api.youmagine.com/designs/${this.name}.json?auth_token=${this.client.token}`;
-    //"https://test.youmagine.com/designs/the-raptor-hand-by-e-nable/assemblies/1/annotations.json";
+    
+    this._uri     = `${this.client.rootUri}/designs/${this.name}.json?auth_token=${this.client.token}`;
+    this.assembliesUrl  = `${this.client.rootUri}/designs/${this.name}/assembies.json?auth_token=${this.client.token}`
+    this.annotationsUrl = `${this.client.rootUri}/designs/${this.name}/assembies/1/annotations.json?auth_token=${this.client.token}`
+    this.bomUrl         = `${this.client.rootUri}/designs/${this.name}/bom.json?auth_token=${this.client.token}`
   }
   
   create(name){
@@ -64,74 +101,117 @@ class Design {
   }
   
   *infos(){
-    console.log("infos for this design");
-    var response = yield this.client.request( this._uri ) ;
-    console.log("final response",response.body);
+    logger.debug(`Infos of ${this.name}`);
+    var response = yield this.client.get( this._uri ) ;
+    logger.debug("infos response",response);
   }
   
   list(){
   }
   
   *assemblies(){
-    var assembliesUrl = `https://test.api.youmagine.com/designs/${this.name}/assembies.json?auth_token=${this.client.token}`
-    var response = yield this.client.request( assembliesUrl ) ;
-    console.log("final response",response.body);
+    logger.debug(`Assemblies of ${this.name}`);
+    var response = yield this.client.get( this.assembliesUrl ) ;
+    logger.debug("assemblies response",response);
   }
   
   *annotations(){
-    var annotationsUrl = `https://test.api.youmagine.com/designs/${this.name}/assembies/1/annotations.json?auth_token=${this.client.token}`
-    //"https://test.youmagine.com/designs/the-raptor-hand-by-e-nable/assemblies.json";
-    var response = yield this.client.request( assembliesUrl ) ;
-    console.log("annotationsUrl response",response.body);
+    logger.debug(`Annotations of ${this.name}`);
+    var response = yield this.client.get( this.annotationsUrl ) ;
+    logger.debug("annotations response",response);
   }
   
   *bom(){
-    var bomUrl = `https://test.api.youmagine.com/designs/${this.name}/bom.json?auth_token=${this.client.token}`
-    var response = yield this.client.request( bomUrl ) ;
-    console.log("bomUrl response",response.body);
+    logger.debug(`BOM of ${this.name}`);
+    var response = yield this.client.get( this.bomUrl ) ;
+    logger.debug("bomUrl response",response);
+  }
+  
+  //CREATE
+  *annotation( data ){
+    logger.debug(`CREATING annotation`);
+    var response = yield this.client.post( this.assembliesUrl ) ;
+    logger.debug("CREATING annotation response",response);
+  }
+  *bomEntry( data ){
+    logger.debug(`CREATING bom entry`);
+    var response = yield this.client.post( this.bomUrl ) ;
+    logger.debug("CREATING bom entry response",response);
   }
 }
 
 
 
 class Client {
-  constructor(token) {
-    this.token = "test.youmagine.com/integrations/jam"
+  constructor(token, rootUri) {
+    this.token   = token   || "";
+    this.rootUri = rootUri || "";
+    this.designsUri = `${this.rootUri}/designs.json?auth_token=${this.token}`;
+    this.usersUri   = `${this.rootUri}/users.json?auth_token=${this.token}`;
   }
   
+  //basic crud methods etc
+  
+  *get( path ){
+    return yield this.request( path );
+  }
+  
+  *post( path, data ){
+    return yield this.request( path, "POST", data);
+  }
+  
+  *put( path, data ){
+    return yield this.request( path, "PUT", data);
+  }
+  
+  ///
   user( name ){
     return new User( name, this );
   }
   
-  design( userName, name ){
-    return new Design( userName, name, this );
+  design( name ){
+    return new Design( name, this );
+  }
+  
+  *users( ){
+    logger.debug("Retrieving users");
+    var response = yield this.get( this.usersUri ) ;
+    logger.debug("users",response);
   }
   
   *designs( ){
+    logger.debug("Retrieving designs");
+    var response = yield this.get( this.designsUri ) ;
+    logger.debug("designs",response);
   }
   
-  *request( path ){
-    console.log("request to path & stuff2", path)
-    var response = yield request( path )
-    console.log("response", response.statusCode, response.body)
+  //helpers  
+  *request( path, method, data ){
+    var response = ""
+    try{
+      var method = method || "GET"
+      
+      logger.debug("request to path & stuff2 "+ path)
+      response = yield request( path )
+      //logger.debug("response", response.statusCode, response.body)
+      
+      response = this._formatResponse( response )
+    }
+    catch(error){
+      logger.error( error )
+      response = null
+    }
     return response
   }
+  
+  _formatResponse( response ){
+    if(!response) throw new Error("no response!")
+    if(response.error) throw new Error(response.error)
+    //logger.debug(HTTPStatus[response.statusCode])
+    if(response.statusCode === 404) throw new Error(HTTPStatus[404])
+    return response.body//JSON.parse(response.body)
+  
+  }
 }
-
-/*var Client =function(token){
-  this.token = "test.youmagine.com/integrations/jam"
-}
-
-Client.prototype.user=function( name ){
-  return new User( name, this );
-}
-
-Client.prototype.request=function*(path){
-  console.log("request to path & stuff", path)
-  var response = yield request( path )
-  console.log("response", response.statusCode, response.body)
-  return response
-}*/
-
 
 module.exports = Client

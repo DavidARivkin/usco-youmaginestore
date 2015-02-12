@@ -14,7 +14,10 @@
     "coffee-script": "~1.6.3",
     "mime": "~1.2.11",
     "request": "^2.53.0",
-    "co": "^4.1.0"
+    "co": "^4.1.0",
+    "composite-detect": "0.0.3",
+    "minilog": "^2.0.6",
+    "http-status": "^0.1.8"
   },
   "devDependencies": {
     "jasmine-node": "1.10.2",
