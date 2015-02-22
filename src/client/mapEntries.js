@@ -1,9 +1,8 @@
-function mapEntries( annotJson ){
+var mapEntries=function( srcJson, fieldName ){
   var output = {};
-  for(key in annotJson){
-    var newKey = `annotation[${key}]`;
-    //console.log("bla", key, newKey);
-    var value = annotJson[key]; 
+  for(var key in srcJson){
+    var newKey = `${fieldName}[${key}]`;
+    var value = srcJson[key]; 
     if(value instanceof Array){
       value = `[${value.join(',')}]`;
     }  
@@ -12,4 +11,4 @@ function mapEntries( annotJson ){
   return output;
 }
 
-module.export = mapEntries;
+module.exports = mapEntries;
